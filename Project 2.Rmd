@@ -1,0 +1,150 @@
+---
+title: "Project 2"
+author: "Shane Hylton"
+date: "10/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+```
+
+## Loading the Data -- NYC Street Trees
+
+I will load the data and isolate the variables of interest.
+Due to the size of the file, I am unable to load the dataframe into github. 
+
+```{r}
+treesraw <- read.csv( '/Users/shanehylton/Desktop/fulltrees.csv')
+trees <- treesraw[c(10,38,39)]
+```
+
+## Plotting a Map of the Data
+
+This suggestion recommended creating a plot of longitude and latitude for each tree. The challenging part of the recommendation will be coloring by species. The plot showed a very interesting outline of New York City. 
+
+```{r}
+
+ggplot(trees, aes(x = longitude, y = latitude, color = spc_common))+
+  geom_point()+
+  theme(legend.position = "none")+
+  scale_x_discrete(labels = NULL, breaks = NULL)+
+  ggtitle('Plot of NYC Street Trees')+
+  ylab("Latitude")+
+  xlab("Longitude")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Analyzing the Lakers' Stats Per Game
+
+Because the only recommendations in the discussion post were to analyze the data, I will refine the dataframe and perform some manipulation. 
+I chose to only pay attention to the players I deemed relevant from a points per game point of view. I filtered the dataframe to omit any players who scored fewer than 7 points per game. After this, I noticed that the points per game statistic was at the end of the data frame, so I relocated it to be after the player's name for easy viewing. 
+
+```{r}
+
+link <- url('https://raw.githubusercontent.com/tylerbaker01/DATA-607-Project-2/main/Laker\'s%20Per%20Game%20Stats')
+lakersraw <- read.csv(link)
+agepts <- lakersraw[c(3, 28)]
+relevantlakers <- filter(lakersraw, PTS.G > 7)
+relsort <- relevantlakers[order(-relevantlakers$PTS.G), ]
+relsort %>%
+  relocate(PTS.G, .after = X)
+
+
+```
+
+## Thread: World Government Indicators
+For this step in the project, I took a look at the data Thomas linked and saw that it linked to a number of very wide, untidy Excel sheets. I downloaded one of the sheets and converted it to a .csv. Then I uploaded it to github and loaded it into R for tidying. 
+After removing the unnecessary rows, I decided to aggregate the data to represent the mean data for each category over time. I am only interested in countries that existed through the entire data collection period, so I removed all NA entries. 
+
+My final dataframe is sorted by the percentile rank for government effectiveness. 
+
+
+```{r}
+
+link <- 'https://raw.githubusercontent.com/st3vejobs/Project-2-files/main/government_eff.csv'
+govraw <- read.csv(url(link))
+gov <- govraw[-c(1:14), ]
+
+names <- c(unlist(c(gov[1, ])))
+colnames(gov) <- names
+gov <- gov[-c(1), ]
+gov[gov=="#N/A"]<-NA
+gov <- na.omit(gov)
+
+cols <- c(which(names(gov) == 'Estimate'))
+Estimate <- gov[cols]
+Estimate[ , c(1:length(Estimate))] <- apply(Estimate[ , c(1:length(Estimate)),drop=F], 2,           
+                 function(x) as.numeric(as.character(x)))
+Estimate <- rowMeans(Estimate)
+finaldf <- data.frame(gov[ , c(1:2)])
+finaldf <- cbind(finaldf, Estimate)
+
+
+cols <- c(which(names(gov) == 'StdErr'))
+StdErr <- gov[cols]
+StdErr[ , c(1:length(StdErr))] <- apply(StdErr[ , c(1:length(StdErr)),drop=F], 2,           
+                 function(x) as.numeric(as.character(x)))
+StdErr <- rowMeans(StdErr)
+finaldf <- cbind(finaldf, StdErr)
+
+cols <- c(which(names(gov) == 'NumSrc'))
+NumSrc <- gov[cols]
+NumSrc[ , c(1:length(NumSrc))] <- apply(NumSrc[ , c(1:length(NumSrc)),drop=F], 2,           
+                 function(x) as.numeric(as.character(x)))
+NumSrc <- rowMeans(NumSrc)
+finaldf <- cbind(finaldf, NumSrc)
+
+cols <- c(which(names(gov) == 'Rank'))
+Rank <- gov[cols]
+Rank[ , c(1:length(Rank))] <- apply(Rank[ , c(1:length(Rank)),drop=F], 2,           
+                 function(x) as.numeric(as.character(x)))
+Rank <- rowMeans(Rank)
+finaldf <- cbind(finaldf, Rank)
+
+cols <- c(which(names(gov) == 'Upper'))
+Upper <- gov[cols]
+Upper[ , c(1:length(Upper))] <- apply(Upper[ , c(1:length(Upper)),drop=F], 2,           
+                 function(x) as.numeric(as.character(x)))
+Upper <- rowMeans(Upper)
+finaldf <- cbind(finaldf, Upper)
+
+cols <- c(which(names(gov) == 'Lower'))
+Lower <- gov[cols]
+Lower[ , c(1:length(Lower))] <- apply(Lower[ , c(1:length(Lower)),drop=F], 2,           
+                 function(x) as.numeric(as.character(x)))
+Lower <- rowMeans(Lower)
+finaldf <- cbind(finaldf, Lower)
+
+finalsort <- finaldf[order(-finaldf$Rank), ]
+head(finalsort)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
